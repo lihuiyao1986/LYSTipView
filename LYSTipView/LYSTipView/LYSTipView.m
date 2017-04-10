@@ -18,7 +18,7 @@
 
 @end
 
-NSTimeInterval const duration = 0.15;
+NSTimeInterval const duration = 0.35;
 
 @implementation LYSTipView
 
@@ -122,9 +122,10 @@ NSTimeInterval const duration = 0.15;
 
 
 - (void)showAnimation {
+    __weak typeof (self)MyWeakSelf = self;
     self.containerView.layer.anchorPoint = CGPointMake(0.5 + self.triangleXOffset / self.tableW , 0);
     [UIView animateWithDuration:duration animations:^{
-        self.containerView.transform = CGAffineTransformMakeScale(1.0, 1.0);
+        MyWeakSelf.containerView.transform = CGAffineTransformMakeScale(1.0, 1.0);
     }];
 }
 
@@ -133,13 +134,14 @@ NSTimeInterval const duration = 0.15;
 }
 
 - (void)dismissAnimation:(void(^)())finishBlock{
+    __weak typeof (self)MyWeakSelf = self;
     [UIView animateWithDuration:duration animations:^{
-      self.containerView.alpha = 0.5f;
+      MyWeakSelf.containerView.alpha = 0.01;
     } completion:^(BOOL finished) {
         if (finishBlock) {
             finishBlock();
         }
-        [self removeFromSuperview];
+        [MyWeakSelf removeFromSuperview];
     }];
 }
 
