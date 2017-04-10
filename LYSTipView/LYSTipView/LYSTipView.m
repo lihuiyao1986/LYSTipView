@@ -33,11 +33,59 @@ NSTimeInterval const duration = 0.25;
 
 -(void)initConfig{
     [self setDefaults];
+    self.backgroundColor = [self colorWithHexString:@"000000" alpha:0.3];
     [self addSubview:self.containerView];
     self.containerView.transform = CGAffineTransformMakeScale(0, 0);
     [self updateTriangle];
 }
 
+
+#pragma mark - 生成16进制颜色
+-(UIColor *)colorWithHexString:(NSString *)color alpha:(CGFloat)alpha{
+    
+    //删除字符串中的空格
+    NSString *cString = [[color stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] uppercaseString];
+    // String should be 6 or 8 characters
+    if ([cString length] < 6)
+    {
+        return [UIColor clearColor];
+    }
+    // strip 0X if it appears
+    //如果是0x开头的，那么截取字符串，字符串从索引为2的位置开始，一直到末尾
+    if ([cString hasPrefix:@"0X"])
+    {
+        cString = [cString substringFromIndex:2];
+    }
+    //如果是#开头的，那么截取字符串，字符串从索引为1的位置开始，一直到末尾
+    if ([cString hasPrefix:@"#"])
+    {
+        cString = [cString substringFromIndex:1];
+    }
+    if ([cString length] != 6)
+    {
+        return [UIColor clearColor];
+    }
+    
+    // Separate into r, g, b substrings
+    NSRange range;
+    range.location = 0;
+    range.length = 2;
+    //r
+    NSString *rString = [cString substringWithRange:range];
+    //g
+    range.location = 2;
+    NSString *gString = [cString substringWithRange:range];
+    //b
+    range.location = 4;
+    NSString *bString = [cString substringWithRange:range];
+    
+    // Scan values
+    unsigned int r, g, b;
+    [[NSScanner scannerWithString:rString] scanHexInt:&r];
+    [[NSScanner scannerWithString:gString] scanHexInt:&g];
+    [[NSScanner scannerWithString:bString] scanHexInt:&b];
+    return [UIColor colorWithRed:((float)r / 255.0f) green:((float)g / 255.0f) blue:((float)b / 255.0f) alpha:alpha];
+}
 
 -(void)setDefaults{
     _bgColor = [UIColor redColor];
@@ -67,6 +115,11 @@ NSTimeInterval const duration = 0.25;
     return _containerView;
 }
 
+-(void)setItemClazz:(Class)itemClazz{
+    _itemClazz = itemClazz;
+    [self.tableView registerClass:_itemClazz forCellReuseIdentifier:NSStringFromClass(self.itemClazz)];
+}
+
 #pragma mark - 列表视图
 -(UITableView*)tableView{
     if (!_tableView) {
@@ -75,6 +128,7 @@ NSTimeInterval const duration = 0.25;
         _tableView.dataSource = self;
         _tableView.delegate = self;
         _tableView.bounces = NO;
+        _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
         _tableView.showsVerticalScrollIndicator = NO;
         _tableView.showsHorizontalScrollIndicator = NO;
         _tableView.layer.cornerRadius = 5;

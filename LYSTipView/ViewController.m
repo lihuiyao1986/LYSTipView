@@ -8,6 +8,7 @@
 
 #import "ViewController.h"
 #import "LYSTipView.h"
+#import "QQMenuCellTableViewCell.h"
 
 @interface ViewController (){
     UIButton *_btn;
@@ -34,14 +35,14 @@
 -(void)btnClicked:(UIButton*)sender{
     LYSTipView *_tipView = [LYSTipView new];
     _tipView.viewXOffset = 50.f;
-    _tipView.dismissOutside = NO;
+    _tipView.itemH = 50.f;
+    _tipView.tableW = 150.f;
+    _tipView.dismissOutside = YES;
     _tipView.viewYOffset = CGRectGetMaxY(sender.frame);
-    _tipView.items = @[@{@"title":@"liyansheng1"},@{@"title":@"liyansheng2"},@{@"title":@"liyansheng3"},@{@"title":@"liyansheng4"},@{@"title":@"liyansheng5"}];
-    _tipView.bgColor = [UIColor blueColor];
+    _tipView.items = @[@{@"title":@"liyansheng1",@"image":@"right_menu_addFri"},@{@"title":@"liyansheng2",@"image":@"right_menu_addFri"},@{@"title":@"liyansheng3",@"image":@"right_menu_addFri"},@{@"title":@"liyansheng4",@"image":@"right_menu_addFri"},@{@"title":@"liyansheng5",@"image":@"right_menu_addFri"}];
+    _tipView.itemClazz = [QQMenuCellTableViewCell class];
     _tipView.HandleCell = ^(UITableViewCell *cell,NSDictionary *item){
-        cell.textLabel.textAlignment = NSTextAlignmentCenter;
-        cell.textLabel.font = [UIFont systemFontOfSize:13];
-        cell.textLabel.text = [item objectForKey:@"title"];
+        ((QQMenuCellTableViewCell*)cell).item = item;
     };
     _tipView.ItemDidSelected = ^(NSDictionary *item){
         NSLog(@"you selected %@",[item objectForKey:@"title"]);
