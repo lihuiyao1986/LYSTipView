@@ -34,12 +34,18 @@
 -(void)btnClicked:(UIButton*)sender{
     LYSTipView *_tipView = [LYSTipView new];
     _tipView.viewXOffset = 50.f;
+    _tipView.dismissOutside = NO;
     _tipView.viewYOffset = CGRectGetMaxY(sender.frame);
-    _tipView.itemH = 30.f;
-    _tipView.items = @[@"d",@"1",@"2"];
-    _tipView.tableW = 120.f;
-    _tipView.triangleXOffset = 20.f;
-    _tipView.triangleHeight = 10.f;
+    _tipView.items = @[@{@"title":@"liyansheng1"},@{@"title":@"liyansheng2"},@{@"title":@"liyansheng3"},@{@"title":@"liyansheng4"},@{@"title":@"liyansheng5"}];
+    _tipView.bgColor = [UIColor blueColor];
+    _tipView.HandleCell = ^(UITableViewCell *cell,NSDictionary *item){
+        cell.textLabel.textAlignment = NSTextAlignmentCenter;
+        cell.textLabel.font = [UIFont systemFontOfSize:13];
+        cell.textLabel.text = [item objectForKey:@"title"];
+    };
+    _tipView.ItemDidSelected = ^(NSDictionary *item){
+        NSLog(@"you selected %@",[item objectForKey:@"title"]);
+    };
     [_tipView show];
 }
 

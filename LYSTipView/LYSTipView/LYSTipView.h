@@ -25,6 +25,18 @@
 
 @property(nonatomic,assign)CGFloat tableW;
 
+@property(nonatomic,strong)UIColor *bgColor;
+
+@property(nonatomic,assign)NSInteger maxCount;
+
+@property(nonatomic,assign)Class itemClazz;
+
+@property(nonatomic,assign)BOOL dismissOutside;
+
+@property(nonatomic,copy)void(^ItemDidSelected)(NSDictionary* item);
+
+@property(nonatomic,copy)void(^HandleCell)(UITableViewCell *cell,NSDictionary* item);
+
 -(void)show;
 
 -(void)hide:(void(^)())finishBlock;

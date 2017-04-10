@@ -18,7 +18,7 @@
 
 @end
 
-NSTimeInterval const duration = 0.35;
+NSTimeInterval const duration = 0.25;
 
 @implementation LYSTipView
 
@@ -32,16 +32,30 @@ NSTimeInterval const duration = 0.35;
 }
 
 -(void)initConfig{
+    [self setDefaults];
     [self addSubview:self.containerView];
     self.containerView.transform = CGAffineTransformMakeScale(0, 0);
-
+    [self updateTriangle];
 }
 
 
+-(void)setDefaults{
+    _bgColor = [UIColor redColor];
+    _maxCount = -1;
+    _itemClazz = [UITableViewCell class];
+    _itemH = 30.f;
+    _tableW = 100.f;
+    _triangleHeight = 10.f;
+    _triangleXOffset = -30.f;
+    _bgColor = [UIColor whiteColor];
+    _dismissOutside = YES;
+}
+
 -(void)layoutSubviews{
     [super layoutSubviews];
-    self.containerView.frame = CGRectMake(self.viewXOffset, self.viewYOffset, self.tableW, self.itemH * self.items.count + self.triangleHeight);
-    self.tableView.frame = CGRectMake(0,self.triangleHeight, self.tableW, self.itemH * self.items.count);
+    NSUInteger count = self.maxCount == -1 ? self.items.count : MIN(self.maxCount, self.items.count);
+    self.containerView.frame = CGRectMake(self.viewXOffset, self.viewYOffset, self.tableW, self.itemH * count + self.triangleHeight);
+    self.tableView.frame = CGRectMake(0,self.triangleHeight, self.tableW,self.itemH * count);
 }
 
 -(UIView*)containerView{
@@ -57,12 +71,15 @@ NSTimeInterval const duration = 0.35;
 -(UITableView*)tableView{
     if (!_tableView) {
         _tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
-        _tableView.backgroundColor = [UIColor greenColor];
+        _tableView.backgroundColor = self.bgColor;
         _tableView.dataSource = self;
         _tableView.delegate = self;
         _tableView.bounces = NO;
+        _tableView.showsVerticalScrollIndicator = NO;
+        _tableView.showsHorizontalScrollIndicator = NO;
         _tableView.layer.cornerRadius = 5;
         _tableView.clipsToBounds = YES;
+        [_tableView registerClass:self.itemClazz forCellReuseIdentifier:NSStringFromClass(self.itemClazz)];
     }
     return _tableView;
 }
@@ -72,10 +89,17 @@ NSTimeInterval const duration = 0.35;
     [self.tableView reloadData];
 }
 
+-(void)setBgColor:(UIColor *)bgColor{
+    _bgColor =  bgColor;
+    self.triangleView.fillColor = self.bgColor.CGColor;
+    self.tableView.backgroundColor = self.bgColor;
+    [self.tableView reloadData];
+}
+
 -(CAShapeLayer*)triangleView{
     if (!_triangleView) {
         _triangleView = [CAShapeLayer layer];
-        _triangleView.fillColor = [UIColor greenColor].CGColor;
+        _triangleView.fillColor = self.bgColor.CGColor;
     }
     return _triangleView;
 }
@@ -92,6 +116,11 @@ NSTimeInterval const duration = 0.35;
 
 -(void)setTriangleXOffset:(CGFloat)triangleXOffset{
     _triangleXOffset = triangleXOffset;
+    if (_triangleXOffset >= self.tableW / 2) {
+        _triangleXOffset = self.tableW / 2 - 20.f;
+    }else if(_triangleXOffset <= - self.tableW / 2){
+        _triangleXOffset = - self.tableW / 2 + 20.f;
+    }
     [self updateTriangle];
 }
 
@@ -136,7 +165,7 @@ NSTimeInterval const duration = 0.35;
 - (void)dismissAnimation:(void(^)())finishBlock{
     __weak typeof (self)MyWeakSelf = self;
     [UIView animateWithDuration:duration animations:^{
-      MyWeakSelf.containerView.alpha = 0.01;
+      MyWeakSelf.containerView.alpha = 0;
     } completion:^(BOOL finished) {
         if (finishBlock) {
             finishBlock();
@@ -149,7 +178,9 @@ NSTimeInterval const duration = 0.35;
     [super touchesBegan:touches withEvent:event];
     CGPoint touchPoint = [[touches anyObject] locationInView:self];
     if (!CGRectContainsPoint(self.containerView.frame, touchPoint)) {
-        [self hide:nil];
+        if (self.dismissOutside) {
+            [self hide:nil];
+        }
     }
 }
 
@@ -161,20 +192,12 @@ NSTimeInterval const duration = 0.35;
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
     
-    NSString *cellId = @"ccz_cell_id";
-    
-    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellId];
-    if (!cell) {
-        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cellId];
-        cell.backgroundColor = [UIColor greenColor];
-        cell.textLabel.textAlignment = NSTextAlignmentCenter;
-        cell.textLabel.font = [UIFont systemFontOfSize:13];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(self.itemClazz)];
+    cell.backgroundColor = self.bgColor;
+    if (self.HandleCell) {
+        self.HandleCell(cell,self.items[indexPath.row]);
     }
-    
-    cell.textLabel.text = self.items[indexPath.row];
-    
     return cell;
-    
 }
 
 - (void)tableView:(UITableView *)tableView willDisplayCell:(UITableViewCell *)cell forRowAtIndexPath:(NSIndexPath *)indexPath {
@@ -189,7 +212,12 @@ NSTimeInterval const duration = 0.35;
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
-    [self hide:nil];
+    __weak typeof (self)MyWeakSelf = self;
+    [self hide:^{
+        if(MyWeakSelf.ItemDidSelected){
+            MyWeakSelf.ItemDidSelected(MyWeakSelf.items[indexPath.row]);
+        }
+    }];
 }
 
 
